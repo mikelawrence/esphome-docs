@@ -17,22 +17,23 @@ This sensor supports both UART and I²C communication. Only I²C communication i
 # Example configuration entry
 sensor:
   - platform: sen5x
-    id: sen54
+    id: my_sen55
+    temperature_compensation:
+      offset: 0.0
+      normalized_offset_slope: 0.0
+      time_constant: 0
+    acceleration_mode: low
     pm_1_0:
-      name: " PM <1µm Weight concentration"
-      id: pm_1_0
+      name: "PM <1µm Weight concentration"
       accuracy_decimals: 1
     pm_2_5:
-      name: " PM <2.5µm Weight concentration"
-      id: pm_2_5
+      name: "PM <2.5µm Weight concentration"
       accuracy_decimals: 1
     pm_4_0:
-      name: " PM <4µm Weight concentration"
-      id: pm_4_0
+      name: "PM <4µm Weight concentration"
       accuracy_decimals: 1
     pm_10_0:
-      name: " PM <10µm Weight concentration"
-      id: pm_10_0
+      name: "PM <10µm Weight concentration"
       accuracy_decimals: 1
     temperature:
       name: "Temperature"
@@ -42,26 +43,67 @@ sensor:
       accuracy_decimals: 0
     voc:
       name: "VOC"
-      algorithm_tuning:
-        index_offset: 100
-        learning_time_offset_hours: 12
-        learning_time_gain_hours: 12
-        gating_max_duration_minutes: 180
-        std_initial: 50
-        gain_factor: 230
+      accuracy_decimals: 0
+    nox:
+      name: "NOx"
+      accuracy_decimals: 0
+```
+
+## SEN6X Series
+
+{{< img src="sen66.jpg" alt="Image" width="50.0%" class="align-center" >}}
+
+```yaml
+# Example SEN66 configuration entry
+sensor:
+  - platform: sen5x
+    id: my_sen66
     temperature_compensation:
-      offset: 0
-      normalized_offset_slope: 0
+      offset: 0.0
+      normalized_offset_slope: 0.0
       time_constant: 0
-    acceleration_mode: low
-    store_baseline: true
-    address: 0x69
-    update_interval: 10s
+    temperature_acceleration:
+      k: 20
+      p: 20
+      t1: 100
+      t2: 300
+    pm_1_0:
+      name: "PM <1µm Weight concentration"
+      accuracy_decimals: 1
+    pm_2_5:
+      name: "PM <2.5µm Weight concentration"
+      accuracy_decimals: 1
+    pm_4_0:
+      name: "PM <4µm Weight concentration"
+      accuracy_decimals: 1
+    pm_10_0:
+      name: "PM <10µm Weight concentration"
+      accuracy_decimals: 1
+    temperature:
+      name: "Temperature"
+      accuracy_decimals: 1
+    humidity:
+      name: "Humidity"
+      accuracy_decimals: 0
+    voc:
+      name: "VOC"
+      accuracy_decimals: 0
+    nox:
+      name: "NOx"
+      accuracy_decimals: 0
+    co2:
+      name: "CO₂"
+      accuracy_decimals: 0
 ```
 
 ## Configuration variables
 
-- **pm_1_0** (*Optional*): The information for the **Weight Concentration** sensor for fine particles up to 1μm. Readings in µg/m³.
+- **model** (*Required*, enum): The model of the connected sensor. Must be one of the following:
+  SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
+
+  - All options from [Sensor](#config-sensor).
+
+- **pm_1_0** (*Optional*): The information for the **Weight Concentration** sensor for fine particles up to 1.0μm. Readings in µg/m³.
 
   - All options from [Sensor](#config-sensor).
 
@@ -77,71 +119,120 @@ sensor:
 
   - All options from [Sensor](#config-sensor).
 
-- **auto_cleaning_interval** (*Optional*): Reads/Writes the interval in seconds of the periodic fan-cleaning.
-
-- **temperature** (*Optional*): Temperature.Note only available with Sen54 or Sen55. The sensor will be ignored on unsupported models.
-
-  - All options from [Sensor](#config-sensor).
-
-- **humidity** (*Optional*): Relative Humidity. Note only available with Sen54 or Sen55. The sensor will be ignored on unsupported models.
+- **temperature** (*Optional*): The information for the Temperature sensor. Only available with SEN54, SEN55,
+  SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
 
   - All options from [Sensor](#config-sensor).
 
-- **voc** (*Optional*): VOC Index. Note only available with Sen54 or Sen55. The sensor will be ignored on unsupported models.
+- **humidity** (*Optional*): The information for the Relative Humidity sensor. Only available with SEN54, SEN55,
+  SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
+
+  - All options from [Sensor](#config-sensor).
+
+- **co2** (*Optional*): The information for the Carbon dioxide (CO₂) sensor. Readings in ppm. Only available with
+  SEN63C, SEN66 or SEN69C.
+
+  - **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
+  False disables automatic CO₂ calibration. Default is `true`.
+  - **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
+  statically compensated for deviations due to current altitude.
+  - **ambient_pressure_compensation** (*Optional*, integer): When set to pressure (in hPA), the CO₂ sensor will be
+  statically compensated for deviations due to ambient pressure.
+  - **ambient_pressure_compensation_source** (*Optional*, [ID](/guides/configuration-types#config-id)): Sets an external
+  pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations due to current pressure.
+  This correction is applied before each update of the CO₂ sensor.
+
+- **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN54, SEN55, SEN65, SEN66, SEN69 or SEN69C.
 
   - **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters. For more details see [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
 
-    - **index_offset** (*Optional*): VOC index representing typical (average) conditions. Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the history in hours. Past events will be forgotten after about twice the learning time. Allowed values are in range 1..1000. The default value is 12 hour
-    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the history in hours. Past events will be forgotten after about twice the learning time. Allowed values are in range 1..1000. The default value is 12 hours.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator during high VOC index signal). Zero disables the gating. Allowed values are in range 0..3000. The default value is 180 minutes
-    - **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during initial learning period, but may result in larger device-todevice variations. Allowed values are in range 10..5000. The default value is 50.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output. Allowed values are in range 1..1000. The default value is 230.
-
-  - All other options from [Sensor](#config-sensor).
+    - **index_offset** (*Optional*): VOC index representing typical (average) conditions.
+      Allowed values are in range 1..250. The default value is 100.
+    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the
+      history in hours. Past events will be forgotten after about twice the learning time.
+      Allowed values are in range 1..1000. The default value is 12 hour.
+    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the
+      history in hours. Past events will be forgotten after about twice the learning time.
+      Allowed values are in range 1..1000. The default value is 12 hours.
+    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+      during high VOC index signal). Zero disables the gating. Allowed values are in range 0..3000.
+      The default value is 180 minutes.
+    - **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
+      initial learning period, but may result in larger device-to-device variations.
+      Allowed values are in range 10..5000. The default value is 50.
+    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
+      Allowed values are in range 1..1000. The default value is 230.
 
 - **nox** (*Optional*): NOx Index. Note: Only available with Sen55. The sensor will be ignored on unsupported models.
 
-  - **algorithm_tuning** (*Optional*): The NOx algorithm can be customized by tuning 5 different parameters.For more details see [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
+  - **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
 
-    - **index_offset** (*Optional*): NOx index representing typical (average) conditions. Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the history in hours. Past events will be forgotten after about twice the learning time. Allowed values are in range 1..1000. The default value is 12 hour
-    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the NOx algorithm gain from the history in hours. Past events will be forgotten after about twice the learning time. Allowed values are in range 1..1000. The default value is 12 hours.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator during high NOx index signal). Zero disables the gating. Allowed values are in range 0..3000. The default value is 180 minutes
-    - **std_initial** (*Optional*): The initial estimate for standard deviation parameter has no impact for NOx. This parameter is still in place for consistency reasons with the VOC tuning parameters command. This parameter must always be set to 50.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output. Allowed values are in range 1..1000. The default value is 230.
+    - **index_offset** (*Optional*): NOx index representing typical (average) conditions.
+      Allowed values are in range 1..250. The default value is 100.
+    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the
+      history in hours. Past events will be forgotten after about twice the learning time.
+      Allowed values are in range 1..1000. The default value is 12 hour.
+    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the NOx algorithm gain from the
+      history in hours. Past events will be forgotten after about twice the learning time.
+      Allowed values are in range 1..1000. The default value is 12 hours.
+    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+      during high NOx index signal). Zero disables the gating. Allowed values are in range 0..3000.
+      The default value is 180 minutes.
+    - **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
+      initial learning period, but may result in larger device-to-device variations.
+      Allowed values are in range 10..5000. The default value is 50.
+    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the NOx index output.
+      Allowed values are in range 1..1000. The default value is 230.
 
-  - All other options from [Sensor](#config-sensor).
+- **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
+  SEN68 or SEN69C.
 
-- **store_baseline** (*Optional*, boolean): Stores and retrieves the baseline VOC and NOx information for quicker startups. Defaults to `true`
-- **temperature_compensation** (*Optional*): These parameters allow to compensate temperature effects of the design-in at customer side by applying a custom temperature offset to the ambient temperature.
+- **store_baseline** (*Optional*, boolean): Stores and retrieves the baseline VOC information for
+  quicker startups. Defaults to `true`. Only available with SEN54, SEN55, SEN65, SEN66, SEN68 or SEN69C.
 
-  The compensated ambient temperature is calculated as follows:
+- **auto_cleaning_interval** (*Optional*, positive int): The periodic fan-cleaning interval in seconds.
+  Only available with SEN55, SEN54 OR SEN55.
 
-  ```c++
-  T_Ambient_Compensated = T_Ambient + (slope * T_Ambient) + offset
-  ```
+- **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
+  effects of the customer design by applying custom temperature offsets to the ambient temperature. Only available
+  with SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN69 or SEN69C.
 
-  Where slope and offset are the values set with this command, smoothed with the specified time constant. The time constant is how fast the slope and offset are applied. After the specified value in seconds, 63% of the new slope and offset are applied.
-  More details about the tuning of these parameters are included in the application note [Temperature Acceleration and Compensation Instructions for SEN5x.](https://sensirion.com/media/documents/9B9DE2A7/61E957EB/Sensirion_Temperature_Acceleration_and_Compensation_Instructions_SEN.pdf)
+  - **offset** (*Optional*, float): Temperature offset [°C]. Defaults to `0`.
+  - **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
+  - **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
 
-  - **offset** (*Optional*): Temperature offset [°C]. Defaults to `0`
-  - **normalized_offset_slope** (*Optional*): Normalized temperature offset slope. Defaults to `0`
-  - **time_constant** (*Optional*): Time constant in seconds. Defaults to `0`
+  Look for the Temperature Compensation section below for more information.
+  
+- **acceleration_mode** (*Optional*): Allowed value are `low`, `medium` and `high`. Defaults to `low`.
+  Only available with SEN54 or SEN55.
 
-- **acceleration_mode** (*Optional*): Allowed value are `low`, `medium` and `high`. (default is `low`  )
+  By default, the RH/T acceleration algorithm is optimized for a sensor which is positioned in free air.
+  If the sensor is integrated into another device, the ambient RH/T output values might not be optimal
+  due to different thermal behavior.
 
-  By default, the RH/T acceleration algorithm is optimized for a sensor which is positioned in free air. If the sensor is integrated into another device, the ambient RH/T output values might not be optimal due to different thermal behavior.
-  This parameter can be used to adapt the RH/T acceleration behavior for the actual use-case, leading in an improvement of the ambient RH/T output accuracy. There is a limited set of different modes available.
-  Medium and high accelerations are particularly indicated for air quality monitors which are subjected to large temperature changes. Low acceleration is advised for stationary devices not subject to large variations in temperature
+  This parameter can be used to adapt the RH/T acceleration behavior for the actual use-case, leading in an
+  improvement of the ambient RH/T output accuracy. There is a limited set of different modes available.
+  Medium and high accelerations are particularly indicated for air quality monitors which are subjected to
+  large temperature changes. Low acceleration is advised for stationary devices not subject to large
+  variations in temperature.
 
-- **address** (*Optional*, int): Manually specify the I²C address of the sensor.
-  Defaults to `0x69`.
+  For more information see
+  [Temperature Acceleration and Compensation Instructions for SEN5x.](https://sensirion.com/media/documents/9B9DE2A7/61E957EB/Sensirion_Temperature_Acceleration_and_Compensation_Instructions_SEN.pdf)
 
-{{< note >}}
-The sensor needs about a minute "warm-up". The VOC and NOx gas index algorithm needs a number of samples before the values stabilize.
+- **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x69`, the
+  address for SEN5X sensors. You must set the address to `0x6B` if you are using a SEN6X sensor.
 
-{{< /note >}}
+> [!NOTE]
+> This component reports readings as soon as they are available without regard initial accuracy.
+> Your configuration should limit reporting of sensor values for a period of time after power-up. A good starting point is 5 minutes.
+>
+> - The PM sensor has a start-up time of 30 seconds.
+> - The temperature sensor has a response time of 1 minute with no mention start-up time.
+> - The humidity sensor has a response time of 20 seconds with no mention start-up time.
+> - The VOC sensor will start detecting events in 1 minute but may take up to 1 hour to meet data sheet specifications.
+> - The NOx sensor will start detecting events in 5 minutes but may take up to 6 hours to meet data sheet specifications.
+> - The CO₂ sensor has a response time of between 60 and 70 seconds with no mention start-up time.
+> - The HCHO sensor has a start-up time of 10 minutes.
 
 ## Wiring
 
@@ -153,41 +244,203 @@ To force the sensor into I²C mode, the SEL pin (Interface Select pin no.5) must
 
 For better stability, the SDA and SCL lines require suitable pull-up resistors.
 
-## Automatic Cleaning
+## Automatic Fan Cleaning
 
-When the module is in Measurement-Mode an automatic fan-cleaning procedure will be triggered periodically following a defined cleaning interval. This will accelerate the fan to maximum speed for 10 seconds to blow out the accumulated dust inside the fan.
+The SEN5X sensors have an automatic fan-cleaning procedure will be triggered periodically following
+`auto_cleaning_interval` cleaning interval. This will accelerate the fan to maximum speed for 10 seconds to blow
+out the accumulated dust inside the fan.
 
 - Measurement values are not updated while the fan-cleaning is running.
-- The cleaning interval is set to 604,800 seconds (i.e., 168 hours or 1 week).
+- The default cleaning interval is set to 604,800 seconds (i.e., 168 hours or 1 week).
 - The interval can be configured using the Set Automatic Cleaning Interval command.
 - Set the interval to 0 to disable the automatic cleaning.
-- A sensor reset, resets the cleaning interval to its default value
-- If the sensor is switched off, the time counter is reset to 0. Make sure to trigger a cleaning cycle at least every week if the sensor is switched off and on periodically (e.g., once per day).
 - The cleaning procedure can also be started manually with the `start_autoclean_fan` Action
 
-The Sen5x sensor has an automatic fan-cleaning which will accelerate the built-in fan to maximum speed for 10 seconds in order to blow out the dust accumulated inside the fan.
-The default automatic-cleaning interval is 168 hours (1 week) of uninterrupted use. Switching off the sensor resets this time counter.
+## Actions
 
-{{< anchor "start_autoclean_fan_action" >}}
+## Fan Cleaning
 
-## `sen5x.start_fan_autoclean` Action
+Both sensor families support manual running of the fan cleaning cycle by using the `sen5x.start_fan_autoclean` action.
+Only available with the SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
 
-This [action](#config-action) manually starts fan-cleaning.
+{{< anchor "start_fan_cleaning_action" >}}
+
+## `sen5x.start_fan_cleaning` Action
+
+This [action](/automations/actions#all-actions) manually starts fan cleaning.
 
 ```yaml
 on_...:
   then:
-    - sen5x.start_fan_autoclean: sen54
+    - sen5x.start_fan_cleaning: sen54
 ```
+
+You can emulate the SEN5X automatic fan cleaning on a SEN6X sensor by calling the `sen5x.start_fan_autoclean:`
+action periodically.
+
+For example, to clean the fan every 7 days while the device is on, as recommended by the manufacturer, the
+following configuration can be added:
+
+``` yaml
+interval:
+  - interval: 7d
+    then:
+      - sen5x.start_fan_autoclean: my_sen66
+```
+
+## Humidity Sensor Heater
+
+The SEN6X humidity sensor can develop an offset in the humidity reading when exposed to high levels of humidity
+for extended periods of time. It supports a heater similar to the one in the SHT4X. The difference is no
+automatic mode. Instead you have to trigger `sen5x.activate_heater` action occasionally.
+
+{{< anchor "activate_heater_action" >}}
+
+### `activate_heater` Action
+
+This [action](/automations/actions#all-actions) manually starts the heater. First all measurements are stopped,
+then the heater is turned on at 200mW for 1s, finally there is a 20 second delay to before reenabling the
+measurements. This is to ensure the heating effects are gone before temperature measurements resume.
+
+``` yaml
+on_...:
+  then:
+    - sen5x.activate_heater: my_sen66
+```
+
+## CO₂ Calibration
+
+The CO₂ sensor by default has auto-calibration enabled. Auto-calibration will adjust the minimum measurement over
+the last week or so to the outdoor average of slightly more than 400 ppm. Auto-calibration assumes that you are
+opening the windows at least once a week. If you don't open the windows then over time the CO₂ level will tend
+downward.
+
+If you know your minimums are not going to be 400 ppm then you can disable auto-calibration and occasionally
+take the sensor outside for 5 minutes and then force a manual CO₂ calibration to the expected outdoor CO₂ level.
+
+{{< anchor "perform_forced_co2_calibration_action" >}}
+
+### `perform_forced_co2_calibration` Action
+
+This [action](/automations/actions#all-actions) forces a manual calibration on the CO₂ sensor. The example below
+will recalibrate the CO₂ sensor when the "CO₂ Calibrate" button is pressed using the "CO₂ Calibration Value"
+number's current value.
+
+``` yaml
+number:
+  - platform: template
+    id: co2_forced_cal_value
+    name: "CO₂ Calibration Value"
+    device_class: carbon_dioxide
+    entity_category: CONFIG
+    optimistic: true
+    max_value: 1200
+    min_value: 400
+    step: 1
+    initial_value: 420
+    set_action:
+      - delay: 1s
+button:
+  - platform: template
+    name: "CO₂ Calibrate"
+    entity_category: CONFIG
+    on_press:
+      - sen5x.perform_forced_co2_calibration:
+          value: !lambda |-
+            float value = id(co2_forced_cal_value).state;
+            return value;
+          id: sen66_sensor
+```
+
+## CO₂ Compensation
+
+The CO₂ sensor supports pressure/altitude compensation. This first approach is to statically define either
+`altitude_compensation` or `ambient_pressure_compensation`. This will improve your CO₂ accuracy over uncompensated
+accuracy. Or you can dynamically adjust pressure compensation by either adding a `ambient_pressure_compensation_source`
+to your configuration for automatic updates or periodically calling `sen5x.set_ambient_pressure_compensation` action
+with the current pressure. Dynamic pressure updates provide the best CO₂ accuracy.
+
+### `set_ambient_pressure_compensation` Action
+
+This [action](/automations/actions#all-actions) updates the current pressure used in CO₂ pressure compensation.
+Must be in hPa or mBar. Only available with SEN63C, SEN66 or SEN69C.
+
+``` yaml
+sensor:
+  - platform: copy
+    id: pressure_to_sen6x
+    source_id: pressure
+    unit_of_measurement: hPa
+    filters:
+      - lambda: |-
+          // convert Pa to hPa (or mBar)
+          return x / 100.0;
+    on_value:
+      then:
+        - lambda: !lambda |-
+            id(sen66_sensor)->set_ambient_pressure_compensation(x);
+```
+
+### Dynamic example with a local sensor
+
+Note: pressure must be hPA or mBar
+
+``` yaml
+sensor:
+  - platform: bme280
+    pressure:
+      name: "Ambient Pressure"
+      id: bme_pressure  
+  - platform: sen5x
+    model: SEN69C
+    co2:
+      name: "CO₂"
+      ambient_pressure_compensation_source: bme_pressure
+```
+
+### Static example with altitude
+
+``` yaml
+sensor:
+  - platform: sen5x
+    model: SEN66
+    co2:
+      name: "CO₂"
+      altitude_compensation: 100m
+```
+
+## NOx and VOC Algorithm Tuning
+
+Both the NOx and VOC sensor support algorithm tuning. These variables are set with the `algorithm_tuning`
+configuration under the `voc` and `nox` sensors. For more details see
+[Engineering Guidelines for SEN5X](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
+
+## Temperature Compensation
+
+The SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C contain an internal temperature compensation mechanism.
+The compensated ambient temperature is calculated as follows:
+
+``` c++
+T_Ambient_Compensated = T_Ambient + (slope*T_Ambient) + offset
+```
+
+Where slope and offset are the values set with `temperature_compensation` configuration variables, smoothed with the
+specified time constant, also a `temperature_compensation` configuration variable. The time constant is how fast the
+slope and offset are applied. After the specified value in seconds, 63% of the new slope and offset are applied.
+
+More details about the tuning of these parameters for SEN5X sensors are included in the application note:
+[Temperature Acceleration and Compensation Instructions for SEN5x](https://sensirion.com/media/documents/9B9DE2A7/61E957EB/Sensirion_Temperature_Acceleration_and_Compensation_Instructions_SEN.pdf).
+
+The SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C support temperature compensation using the same formula above but with the added
+feature of up to five slots. At this time only slot 0 is supported. A later update will correct this issue.
+
+More details about the tuning of these parameters for SEN6X sensors are included in the application note:
+[SEN6x – Temperature Acceleration and Compensation Instructions](https://sensirion.com/media/documents/C964FCC8/693FD554/PS_AN_SEN6x_Temperature_Compensation_and_Acceleration_Application_No.pdf).
 
 ## See Also
 
 - [Sensor Filters](#sensor-filters)
 - {{< docref "absolute_humidity/" >}}
-- {{< docref "sds011/" >}}
-- {{< docref "pmsx003/" >}}
-- {{< docref "ccs811/" >}}
 - {{< docref "scd4x/" >}}
-- {{< docref "sps30/" >}}
 - {{< docref "sgp4x/" >}}
 - {{< apiref "sen5x/sen5x.h" "sen5x/sen5x.h" >}}
