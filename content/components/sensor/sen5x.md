@@ -124,8 +124,9 @@ sensor:
 
   - All other options from [Sensor](/components/sensor).
 
-- **store_baseline** (*Optional*, boolean): Stores and retrieves the baseline VOC and NOx information for
-  quicker startups. Defaults to `true`
+- **store_baseline** (*Optional*, boolean): When set to true the VOC Algorithm State is saved to flash every 2 hours.
+  During setup the VOC sensor loads the previously saved Algorithm State bypassing the initial learning phase. This
+  dramatically improves VOC performance. Only available with SEN54 or SEN55.
 - **temperature_compensation** (*Optional*): These parameters allow to compensate temperature effects of the
   design-in at customer side by applying a custom temperature offset to the ambient temperature.
 
