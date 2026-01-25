@@ -124,9 +124,13 @@ sensor:
 
   - All other options from [Sensor](/components/sensor).
 
-- **store_baseline** (*Optional*, boolean): When set to true the VOC Algorithm State is saved to flash every 2 hours.
-  During setup the VOC sensor loads the previously saved Algorithm State bypassing the initial learning phase. This
-  dramatically improves VOC performance. Only available with SEN54 or SEN55.
+- **store_baseline** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
+  2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
+  skip the initial learning phase. This can greatly improve recovery times after a short reboot. Note: A saved
+  VOC Algorithm State is only good for about 10 minutes and loading an old value (days old) can actually make
+  the VOC sensor take longer stabilize than if it was not loaded in the first place. Only available with SEN54
+  or SEN55.
+
 - **temperature_compensation** (*Optional*): These parameters allow to compensate temperature effects of the
   design-in at customer side by applying a custom temperature offset to the ambient temperature.
 
